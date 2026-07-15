@@ -7,8 +7,6 @@ import kotlinx.coroutines.withContext
 import org.eclipse.jgit.api.Git as JGit
 import org.eclipse.jgit.diff.DiffEntry
 import org.eclipse.jgit.diff.DiffFormatter
-import org.eclipse.jgit.diff.RawTextComparator
-import org.eclipse.jgit.internal.storage.file.FileRepository
 import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.Ref
@@ -23,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class GitManager {
 
-    private val repositoryCache = ConcurrentHashMap<String, Git>()
+    private val repositoryCache = ConcurrentHashMap<String, JGit>()
     private val repoMutex = Mutex()
 
     suspend fun discover(directory: String): Git.Repository? = withContext(Dispatchers.IO) {
@@ -159,8 +157,6 @@ class GitManager {
 
             val df = DiffFormatter(NullOutputStream.INSTANCE)
             df.setRepository(repository)
-            df.scanOldTree = true
-            df.scanNewTree = true
 
             val entries = if (staged) {
                 val headCommit = repository.resolve(Constants.HEAD)
@@ -464,7 +460,7 @@ class GitManager {
         }
     }
 
-    private suspend fun getGit(directory: String): Git? = repoMutex.withLock {
+    private suspend fun getGit(directory: String): JGit? = repoMutex.withLock {
         val normalizedPath = File(directory).canonicalPath
 
         repositoryCache[normalizedPath]?.let { git ->

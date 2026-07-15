@@ -10,6 +10,7 @@ import javax.inject.Singleton
 @Singleton
 class EventBus @Inject constructor() {
 
+    @PublishedApi
     internal val _events = MutableSharedFlow<Event>(extraBufferCapacity = 1024)
     val events: SharedFlow<Event> = _events
 
