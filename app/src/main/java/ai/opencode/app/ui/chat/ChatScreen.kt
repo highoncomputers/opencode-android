@@ -223,8 +223,9 @@ fun ChatScreen(
                             }
                         }
                     }
+                }
 
-                    AnimatedVisibility(
+                AnimatedVisibility(
                         visible = listState.canScrollBackward,
                         enter = fadeIn(),
                         exit = fadeOut(),
