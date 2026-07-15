@@ -12,7 +12,7 @@ import android.os.Message
 import android.os.Messenger
 import androidx.core.app.NotificationCompat
 import ai.opencode.app.MainActivity
-import ai.opencode.app.R
+import ai.opencode.android.R
 import ai.opencode.app.di.EventBroadcaster
 import ai.opencode.app.di.ServerState
 import ai.opencode.app.di.ServerStateHolder

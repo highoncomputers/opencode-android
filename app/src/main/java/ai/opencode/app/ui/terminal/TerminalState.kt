@@ -425,6 +425,13 @@ class TerminalState(
                     }
                 }
 
+                ParseState.DCS_STRING -> {
+                    // Consume DCS string data until ST
+                    if (b == 0x1B) {
+                        parseState = ParseState.OSC_ESC
+                    }
+                }
+
                 ParseState.SOS, ParseState.PM, ParseState.APC -> {
                     // Skip until ST
                     if (b == 0x1B) {

@@ -221,7 +221,9 @@ private fun parseMarkdownBlocks(text: String): List<MarkdownBlock> {
     return blocks
 }
 
+@Composable
 private fun renderInlineMarkdown(text: String): AnnotatedString {
+    val linkColor = MaterialTheme.colorScheme.primary
     return buildAnnotatedString {
         var remaining = text
         while (remaining.isNotEmpty()) {
@@ -273,7 +275,7 @@ private fun renderInlineMarkdown(text: String): AnnotatedString {
                     if (linkEnd > 0 && closeEnd > 0) {
                         val linkText = remaining.substring(1, linkEnd)
                         withStyle(SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = linkColor,
                             textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
                         )) {
                             append(linkText)

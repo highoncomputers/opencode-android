@@ -553,7 +553,7 @@ class TerminalInputConnection(
         return true
     }
 
-    override fun performEditorAction(actionId: Int, imeFlags: Int): Boolean {
+    override fun performEditorAction(actionId: Int): Boolean {
         onKeyInput(byteArrayOf(0x0D))
         return true
     }
@@ -593,7 +593,7 @@ class TerminalInputConnection(
 
     override fun reportFullscreenMode(enabled: Boolean): Boolean = true
 
-    override fun performCursorMovedAction(whichMovement: Int): Boolean = false
+    override fun getCharacterBounds(index: Int): android.graphics.Rect = android.graphics.Rect()
 
     override fun setComposingText(text: CharSequence?, newCursorPosition: Int): Boolean = true
 
@@ -613,7 +613,7 @@ class TerminalInputConnection(
 
     override fun setSelection(start: Int, end: Int): Boolean = false
 
-    override fun requestCursorUpdates(cursorUpdateMode: Int) {}
+    override fun requestCursorUpdates(cursorUpdateMode: Int): Boolean = false
 
     override fun performContextMenuAction(id: Int): Boolean = false
 
@@ -622,6 +622,4 @@ class TerminalInputConnection(
     override fun restartInput() {}
 
     override fun isFullscreenMode(): Boolean = false
-
-    override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection = this
 }

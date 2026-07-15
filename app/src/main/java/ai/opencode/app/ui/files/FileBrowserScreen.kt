@@ -342,6 +342,7 @@ private fun getFileIcon(file: FileItem): ImageVector {
     }
 }
 
+@Composable
 private fun getFileColor(file: FileItem): Color {
     if (file.isDirectory) return GitModified
     return when (file.name.substringAfterLast(".").lowercase()) {
