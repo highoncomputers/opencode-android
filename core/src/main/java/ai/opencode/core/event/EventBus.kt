@@ -20,5 +20,5 @@ class EventBus @Inject constructor() {
 
     fun subscribe(): Flow<Event> = _events
 
-    inline fun <reified T : Event> subscribe(): Flow<T> = _events.filterIsInstance<T>()
+    inline fun <reified T : Event> subscribeType(): Flow<T> = _events.filterIsInstance<T>()
 }

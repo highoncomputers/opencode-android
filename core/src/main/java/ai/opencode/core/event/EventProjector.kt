@@ -38,12 +38,12 @@ class EventProjector @Inject constructor(
 
     fun start() {
         scope.launch {
-            eventBus.subscribe<Event.Durable>().collect { event ->
+            eventBus.subscribeType<Event.Durable>().collect { event ->
                 projectDurable(event)
             }
         }
         scope.launch {
-            eventBus.subscribe<Event.Ephemeral>().collect { event ->
+            eventBus.subscribeType<Event.Ephemeral>().collect { event ->
                 projectEphemeral(event)
             }
         }
