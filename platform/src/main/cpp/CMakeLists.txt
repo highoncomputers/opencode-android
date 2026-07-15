@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.22.1)
+project("opencode-pty")
+
+add_library(
+    pty SHARED
+    pty.c
+)
+
+find_library(log-lib log)
+target_link_libraries(pty ${log-lib})

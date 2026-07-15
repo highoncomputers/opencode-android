@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenCode</string>
+    <string name="foreground_service_channel">OpenCode Server</string>
+    <string name="foreground_service_description">Keeping OpenCode server running</string>
+    <string name="server_running">OpenCode server is running</string>
+    <string name="server_notification_title">OpenCode Active</string>
+    <string name="server_notification_text">AI coding agent is running in background</string>
+</resources>
