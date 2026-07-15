@@ -62,9 +62,9 @@ class AndroidProcessSpawner @Inject constructor(
 
             workingDirectory?.let { directory(File(it)) }
 
-            val processEnv = environment.toMutableMap()
+            val processEnv = environment().toMutableMap()
             processEnv.putIfAbsent("TERM", "xterm-256color")
-            environment(processEnv)
+            environment().putAll(processEnv)
 
             redirectErrorStream(true)
         }
@@ -203,9 +203,9 @@ class AndroidProcessSpawner @Inject constructor(
             }
 
             workingDirectory?.let { directory(File(it)) }
-            val processEnv = environment.toMutableMap()
+            val processEnv = environment().toMutableMap()
             processEnv.putIfAbsent("TERM", "xterm-256color")
-            environment(processEnv)
+            environment().putAll(processEnv)
             redirectErrorStream(true)
         }
 

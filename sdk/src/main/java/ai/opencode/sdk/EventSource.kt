@@ -3,6 +3,7 @@ package ai.opencode.sdk
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.websocket.*
@@ -11,13 +12,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 
 class EventSource(
     private val baseUrl: String,
@@ -45,7 +48,7 @@ class EventSource(
     fun subscribe(
         sessionID: String? = null,
         eventTypes: List<String>? = null
-    ): Flow<ServerEvent> = flow {
+    ): Flow<ServerEvent> = callbackFlow {
         val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://")
         val endpoint = if (sessionID != null) {
             "$wsUrl/api/session/$sessionID/event"
@@ -54,7 +57,7 @@ class EventSource(
         }
 
         client = HttpClient(OkHttp) {
-            install(io.ktor.client.plugins.websockets.WebSockets)
+            install(io.ktor.client.plugins.websocket.WebSockets)
             defaultRequest {
                 if (username != null && password != null) {
                     val credentials = java.util.Base64.getEncoder()
@@ -74,9 +77,9 @@ class EventSource(
                             if (frame is Frame.Text) {
                                 val text = frame.readText()
                                 reconnectAttempts = 0
-                                val serverEvent = parseJsonEvent(text)
+                                val serverEvent = parseJsonEvent(text, sessionID)
                                 if (serverEvent != null) {
-                                    emit(serverEvent)
+                                    trySend(serverEvent)
                                     _events.tryEmit(serverEvent)
                                 }
                             }
@@ -90,7 +93,7 @@ class EventSource(
                             error = "Max reconnection attempts reached",
                             cause = e
                         )
-                        emit(errorEvent)
+                        trySend(errorEvent)
                         _events.tryEmit(errorEvent)
                         break
                     }
@@ -101,9 +104,11 @@ class EventSource(
             client?.close()
             client = null
         }
+
+        awaitClose { unsubscribe() }
     }
 
-    private fun parseJsonEvent(data: String): ServerEvent? {
+    private fun parseJsonEvent(data: String, sessionID: String? = null): ServerEvent? {
         return try {
             val root = json.parseToJsonElement(data).jsonObject
             val eventType = root["type"]?.toString()?.removeSurrounding("\"") ?: return null

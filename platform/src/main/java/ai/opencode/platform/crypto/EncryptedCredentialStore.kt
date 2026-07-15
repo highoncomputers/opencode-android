@@ -187,7 +187,7 @@ class EncryptedCredentialStore @Inject constructor(
         val secretKey = keyStore.getEntry(KEY_ALIAS, null) as KeyStore.SecretKeyEntry
 
         val cipher = javax.crypto.Cipher.getInstance(TRANSFORMATION)
-        val ivSpec = javax.crypto.spec.IVParameterSpec(iv)
+        val ivSpec = javax.crypto.spec.IvParameterSpec(iv)
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, secretKey.secretKey, ivSpec)
 
         return String(cipher.doFinal(encrypted), Charsets.UTF_8)

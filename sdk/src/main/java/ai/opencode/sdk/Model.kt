@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonElement
 @Serializable
 data class ApiError(
     val error: String,
-    val message: String? = null,
+    override val message: String? = null,
     val statusCode: Int = 0
 ) : Exception(error) {
     override fun toString(): String = "ApiError($error: $message)"

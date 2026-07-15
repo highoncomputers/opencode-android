@@ -142,7 +142,6 @@ class AndroidFileWatcher @Inject constructor(
             FileObserver.MOVED_TO -> FileChangeType.MOVED_TO
             FileObserver.CLOSE_WRITE -> FileChangeType.CLOSE_WRITE
             FileObserver.DELETE_SELF -> FileChangeType.DELETED_SELF
-            FileObserver.MOVED_SELF -> FileChangeType.MOVED_SELF
             FileObserver.ATTRIB -> FileChangeType.ATTRIBUTES_CHANGED
             else -> FileChangeType.UNKNOWN
         }
@@ -164,7 +163,6 @@ enum class FileChangeType {
     MOVED_TO,
     CLOSE_WRITE,
     DELETED_SELF,
-    MOVED_SELF,
     ATTRIBUTES_CHANGED,
     UNKNOWN
 }
