@@ -3,6 +3,7 @@ package ai.opencode.app
 import android.app.Application
 import android.content.Intent
 import android.os.Build
+import ai.opencode.android.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import ai.opencode.platform.notification.NotificationHelper
 import timber.log.Timber
