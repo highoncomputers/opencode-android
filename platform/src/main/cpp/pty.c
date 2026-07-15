@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <signal.h>
 #include <termios.h>
+#include <sys/wait.h>
 #include <poll.h>
 
 #ifdef __ANDROID__
@@ -74,7 +75,7 @@ Java_ai_opencode_platform_pty_NativePTY_nativeCreate(
     tios.c_iflag = ICRNL | IXON;
     tios.c_oflag = OPOST | NL0 | CR0 | TAB0 | BS0 | VT0 | FF0;
     tios.c_cflag = CREAD | CS8 | HUPCL;
-    tios.c_lflag = ICANON | ISIG | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | ECHOIP | IEXTEN;
+    tios.c_lflag = ICANON | ISIG | ECHO | ECHOE | ECHOK | ECHOKE | ECHOCTL | IEXTEN;
     cfmakeraw(&tios);
     tios.c_cc[VMIN] = 1;
     tios.c_cc[VTIME] = 0;
