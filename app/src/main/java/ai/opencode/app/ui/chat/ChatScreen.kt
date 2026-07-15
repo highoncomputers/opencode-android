@@ -223,14 +223,13 @@ fun ChatScreen(
                             }
                         }
                     }
-                }
 
-                AnimatedVisibility(
-                        visible = listState.canScrollBackward,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                        modifier = Modifier.align(Alignment.BottomCenter)
-                    ) {
+                    AnimatedVisibility(
+                    visible = listState.canScrollBackward,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
                         IconButton(
                             onClick = {
                                 coroutineScope.launch {
