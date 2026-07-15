@@ -19,9 +19,9 @@ import kotlin.coroutines.coroutineContext
 
 abstract class BaseLLMProviderImpl(
     override val providerID: String,
-    override val name: String,
-    override val supportedModels: List<String>,
-    override val defaultEndpoint: ProviderEndpoint,
+    val name: String,
+    val supportedModels: List<String>,
+    val defaultEndpoint: ProviderEndpoint,
     protected val auth: ProviderAuth
 ) : LLMClient {
 
@@ -69,7 +69,7 @@ abstract class BaseLLMProviderImpl(
     abstract suspend fun buildRequestBody(request: LLMRequest): JsonElement
     abstract fun parseSSEEvent(event: String): List<LLMEvent>
     abstract fun parseResponse(responseBody: String): LLMResponse
-    abstract fun buildObjectRequestBody(request: LLMRequest, schema: String): JsonElement
+    abstract suspend fun buildObjectRequestBody(request: LLMRequest, schema: String): JsonElement
 
     protected open val streamingEndpoint: String = "/chat/completions"
     protected open val generateEndpoint: String = "/chat/completions"

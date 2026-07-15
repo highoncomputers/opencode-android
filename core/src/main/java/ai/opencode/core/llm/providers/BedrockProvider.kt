@@ -125,6 +125,9 @@ class BedrockProviderImpl(
     override suspend fun buildObjectRequestBody(request: LLMRequest, schema: String): JsonElement =
         buildBedrockRequestBody(request)
 
+    override suspend fun buildRequestBody(request: LLMRequest): JsonElement =
+        buildBedrockRequestBody(request)
+
     private fun buildBedrockRequestBody(request: LLMRequest): JsonElement {
         if (request.model.startsWith("anthropic.")) {
             return buildAnthropicBedrockBody(request)
@@ -400,7 +403,7 @@ class BedrockProviderImpl(
         )
     }
 
-    private fun parseResponse(responseBody: String): LLMResponse = parseBedrockResponse(responseBody)
+    override fun parseResponse(responseBody: String): LLMResponse = parseBedrockResponse(responseBody)
 
     private fun signAwsRequest(
         method: String,

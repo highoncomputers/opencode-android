@@ -138,9 +138,13 @@ class ToolRegistry(
         context: ToolContext
     ): Output {
         val decoded = decodeInput(input)
-        val result = execute(decoded, context)
-        val projected = projectResult(result, context)
-        return encodeOutput(projected)
+        val output = execute(decoded, context)
+        val projected = projectResult(output.result, context)
+        return Output(
+            toolID = output.toolID,
+            callID = output.callID,
+            result = projected
+        )
     }
 
     private fun decodeInput(input: Input): Input {

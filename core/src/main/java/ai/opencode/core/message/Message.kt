@@ -2,6 +2,7 @@ package ai.opencode.core.message
 
 import ai.opencode.core.tool.Tool
 import kotlinx.serialization.Serializable
+import java.lang.System
 
 @Serializable
 sealed class Message {

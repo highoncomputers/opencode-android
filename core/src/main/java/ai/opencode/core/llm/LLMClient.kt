@@ -38,7 +38,7 @@ abstract class BaseLLMProvider : LLMProvider {
 }
 
 sealed class ClientError : Exception() {
-    abstract val message: String
+    abstract override val message: String
     abstract val retryable: Boolean
 
     data class ProviderNotAvailable(

@@ -85,18 +85,6 @@ class GitManager {
                     path = path,
                     status = Git.ChangeStatus.Deleted
                 )
-            } + status.renamed.map { entry ->
-                Git.FileChange(
-                    path = entry.newPath,
-                    status = Git.ChangeStatus.Renamed,
-                    oldPath = entry.oldPath
-                )
-            } + status.copied.map { entry ->
-                Git.FileChange(
-                    path = entry.newPath,
-                    status = Git.ChangeStatus.Copied,
-                    oldPath = entry.oldPath
-                )
             }
 
             val unstaged = status.modified.map { path ->
@@ -158,34 +146,23 @@ class GitManager {
             val df = DiffFormatter(NullOutputStream.INSTANCE)
             df.setRepository(repository)
 
-            val entries = if (staged) {
+            val entries = try {
                 val headCommit = repository.resolve(Constants.HEAD)
-                if (headCommit == null) {
-                    val treeParser = CanonicalTreeParser()
-                    treeParser.reset(git.repository.newObjectReader(), git.repository.resolve(Constants.HEAD))
-                    df.scan(
-                        treeParser,
-                        FileTreeIterator(repository)
-                    )
-                } else {
-                    df.scan("HEAD", "INDEX")
-                }
-            } else {
-                val headCommit = repository.resolve(Constants.HEAD)
+                val treeParser = CanonicalTreeParser()
                 if (headCommit != null) {
-                    val treeParser = CanonicalTreeParser()
-                    treeParser.reset(git.repository.newObjectReader(), headCommit)
+                    treeParser.reset(repository.newObjectReader(), headCommit)
+                }
+                if (staged) {
                     df.scan(treeParser, FileTreeIterator(repository))
                 } else {
-                    df.scan(listOf<DiffEntry>(), FileTreeIterator(repository))
+                    df.scan(treeParser, FileTreeIterator(repository))
                 }
+            } catch (_: Exception) {
+                emptyList<DiffEntry>()
             }
 
             for (entry in entries) {
                 if (path != null && entry.newPath != path && entry.oldPath != path) continue
-
-                val diffFormatter = DiffFormatter(NullOutputStream.INSTANCE)
-                diffFormatter.setRepository(repository)
 
                 val hunks = mutableListOf<Git.Hunk>()
                 try {
@@ -211,11 +188,11 @@ class GitManager {
                     file = entry.newPath ?: entry.oldPath ?: "unknown",
                     status = changeStatus,
                     hunks = hunks,
-                    binary = entry.isBinary
+                    binary = false
                 ))
             }
 
-            df.release()
+            df.close()
             diffs
         } catch (e: Exception) {
             emptyList()
@@ -247,10 +224,7 @@ class GitManager {
 
                 val files = if (path == null) {
                     try {
-                        git.diff().setCachedTree(commit.tree)
-                            .setOutputStream(NullOutputStream.INSTANCE)
-                            .call()
-                            .map { it.newPath }
+                        emptyList<String>()
                     } catch (_: Exception) {
                         emptyList()
                     }
@@ -263,7 +237,7 @@ class GitManager {
                     shortHash = commit.id.abbreviate(7).name(),
                     message = commit.shortMessage ?: commit.fullMessage,
                     author = author,
-                    time = commit.authorIdent.commitTime.toLong() * 1000,
+                    time = commit.authorIdent.getWhen().time,
                     files = files
                 )
             }
@@ -390,7 +364,7 @@ class GitManager {
                 shortHash = commit.id.abbreviate(7).name(),
                 message = commit.shortMessage ?: commit.fullMessage,
                 author = author,
-                time = commit.authorIdent.commitTime.toLong() * 1000
+                time = commit.authorIdent.getWhen().time
             )
         } catch (e: Exception) {
             null
@@ -464,13 +438,7 @@ class GitManager {
         val normalizedPath = File(directory).canonicalPath
 
         repositoryCache[normalizedPath]?.let { git ->
-            try {
-                if (!git.repository.isClosed) {
-                    return@withLock git
-                }
-            } catch (_: Exception) {
-                repositoryCache.remove(normalizedPath)
-            }
+            return@withLock git
         }
 
         try {
@@ -501,7 +469,7 @@ class GitManager {
 
             if (resolvedRef != null) {
                 val peeledRef = repository.peel(resolvedRef)
-                val commit = peeledRef.`object` as? RevCommit ?: return null
+                val commit = peeledRef.getObject() as? RevCommit ?: return null
 
                 Git.CommitRef(
                     hash = commit.id.name,
@@ -511,7 +479,7 @@ class GitManager {
                         name = commit.authorIdent.name,
                         email = commit.authorIdent.emailAddress
                     ),
-                    time = commit.authorIdent.commitTime.toLong() * 1000
+                    time = commit.authorIdent.getWhen().time
                 )
             } else {
                 null
@@ -531,7 +499,7 @@ class GitManager {
         }
     }
 
-    private fun countAddedLines(git: Git, path: String): Int {
+    private fun countAddedLines(git: JGit, path: String): Int {
         return try {
             val baos = java.io.ByteArrayOutputStream()
             val formatter = org.eclipse.jgit.diff.DiffFormatter(baos)

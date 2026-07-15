@@ -188,7 +188,7 @@ class AnthropicProviderImpl(
                                 }
                             }
                         }
-                    } else "")
+                    } else JsonPrimitive(""))
                 }
             }
         })

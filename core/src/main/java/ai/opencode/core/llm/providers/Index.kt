@@ -1,7 +1,14 @@
 package ai.opencode.core.llm.providers
 
 import ai.opencode.core.llm.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 object LLMProviderRegistry {
     private val factories = mutableMapOf<String, LLMProvider>()
@@ -24,7 +31,7 @@ object LLMProviderRegistry {
 
     fun unregister(providerID: String) {
         factories.remove(providerID)
-        clients.remove(providerID)?.close()
+        clients.remove(providerID)?.let { client -> runBlocking { client.close() } }
     }
 
     fun getProvider(providerID: String): LLMProvider? = factories[providerID]
@@ -43,7 +50,7 @@ object LLMProviderRegistry {
         validation.exceptionOrNull()?.let { throw it }
 
         val existingClient = clients[providerID]
-        existingClient?.close()
+        existingClient?.let { client -> runBlocking { client.close() } }
 
         val client = factory.createClient(endpoint, auth)
         clients[providerID] = client
@@ -61,7 +68,7 @@ object LLMProviderRegistry {
     fun closeAll() {
         clients.values.forEach { client ->
             try {
-                client.close()
+                runBlocking { client.close() }
             } catch (_: Exception) {
                 // Ignore close errors
             }
@@ -119,18 +126,20 @@ object LLMProviderRegistry {
             val root = Json.parseToJsonElement(jsonConfig).jsonObject
             val providers = root["providers"]?.jsonObject ?: return result
 
-            for ((id, value) in providers) {
+            for (entry in providers.entries) {
+                val id = entry.key
+                val value = entry.value
                 val providerObj = value.jsonObject
                 val baseURL = providerObj["baseURL"]?.jsonPrimitive?.contentOrNull ?: continue
 
                 val headers = mutableMapOf<String, String>()
-                providerObj["headers"]?.jsonObject?.forEach { (key, value) ->
-                    headers[key] = value.jsonPrimitive.content
+                providerObj["headers"]?.jsonObject?.entries?.forEach { headerEntry ->
+                    headers[headerEntry.key] = headerEntry.value.jsonPrimitive.content
                 }
 
-                val extra = mutableMapOf<String, Json>()
-                providerObj["extra"]?.jsonObject?.forEach { (key, value) ->
-                    extra[key] = Json.parseToJsonElement(value.toString())
+                val extra = mutableMapOf<String, JsonElement>()
+                providerObj["extra"]?.jsonObject?.entries?.forEach { extraEntry ->
+                    extra[extraEntry.key] = Json.parseToJsonElement(extraEntry.value.toString())
                 }
 
                 val endpoint = ProviderEndpoint(

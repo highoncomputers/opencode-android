@@ -12,6 +12,7 @@ import ai.opencode.core.database.entity.SessionEntity
 import ai.opencode.core.event.Event
 import ai.opencode.core.message.Message
 import ai.opencode.core.model.Model
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map

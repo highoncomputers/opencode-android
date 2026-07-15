@@ -6,6 +6,7 @@ import ai.opencode.core.permission.Permission.Rule
 import ai.opencode.core.permission.Permission.Ruleset
 import ai.opencode.core.permission.Permission.Source
 import ai.opencode.core.permission.Permission.SourceType
+import java.util.regex.Pattern
 
 object PermissionEvaluator {
 

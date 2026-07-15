@@ -1,6 +1,7 @@
 package ai.opencode.core.llm
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 data class LLMRoute(
@@ -50,7 +51,8 @@ data class ProviderEndpoint(
     val headers: Map<String, String> = emptyMap(),
     val timeoutMs: Long = 120_000,
     val maxRetries: Int = 2,
-    val connectTimeoutMs: Long = 15_000
+    val connectTimeoutMs: Long = 15_000,
+    val extra: Map<String, JsonElement> = emptyMap()
 )
 
 @Serializable

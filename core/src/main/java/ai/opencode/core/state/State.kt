@@ -1,9 +1,12 @@
 package ai.opencode.core.state
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class State<T>(initialValue: T) {
     private val _state = MutableStateFlow(initialValue)
@@ -23,8 +26,8 @@ class State<T>(initialValue: T) {
 
     fun <R> map(transform: (T) -> R): State<R> {
         val derived = State(transform(value))
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default).apply {
-            kotlinx.coroutines.launch {
+        CoroutineScope(Dispatchers.Default).apply {
+            launch {
                 state.collect { newValue ->
                     derived.set(transform(newValue))
                 }
