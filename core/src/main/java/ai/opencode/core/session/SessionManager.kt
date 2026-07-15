@@ -420,7 +420,7 @@ class SessionManager(
     ) {
         val maxSequence = eventDao.getMaxSequence(sessionId) ?: 0L
         val entity = EventEntity(
-            id = event.id.value,
+            id = event.id,
             sessionId = sessionId,
             type = type,
             sequence = maxSequence + 1,

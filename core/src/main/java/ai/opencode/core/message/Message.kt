@@ -2,7 +2,7 @@ package ai.opencode.core.message
 
 import ai.opencode.core.tool.Tool
 import kotlinx.serialization.Serializable
-import java.lang.System
+import java.lang.System as JvmSystem
 
 @Serializable
 sealed class Message {
@@ -25,8 +25,8 @@ sealed class Message {
         override val id: ID = ID.create(),
         override val sessionID: String,
         override val agent: String? = null,
-        override val timeCreated: Long = System.currentTimeMillis(),
-        override val timeUpdated: Long = System.currentTimeMillis(),
+        override val timeCreated: Long = JvmSystem.currentTimeMillis(),
+        override val timeUpdated: Long = JvmSystem.currentTimeMillis(),
         val parts: List<Part> = emptyList()
     ) : Message()
 
@@ -35,8 +35,8 @@ sealed class Message {
         override val id: ID = ID.create(),
         override val sessionID: String,
         override val agent: String? = null,
-        override val timeCreated: Long = System.currentTimeMillis(),
-        override val timeUpdated: Long = System.currentTimeMillis(),
+        override val timeCreated: Long = JvmSystem.currentTimeMillis(),
+        override val timeUpdated: Long = JvmSystem.currentTimeMillis(),
         val parts: List<Part> = emptyList(),
         val modelID: String? = null,
         val providerID: String? = null,
@@ -48,14 +48,14 @@ sealed class Message {
         override val id: ID = ID.create(),
         override val sessionID: String,
         override val agent: String? = null,
-        override val timeCreated: Long = System.currentTimeMillis(),
-        override val timeUpdated: Long = System.currentTimeMillis(),
+        override val timeCreated: Long = JvmSystem.currentTimeMillis(),
+        override val timeUpdated: Long = JvmSystem.currentTimeMillis(),
         val toolRef: Tool.Ref,
         val input: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap(),
         val output: List<ToolOutput> = emptyList(),
         val status: ToolStatus = ToolStatus.Running,
         val title: String? = null,
-        val timeStarted: Long = System.currentTimeMillis(),
+        val timeStarted: Long = JvmSystem.currentTimeMillis(),
         val timeCompleted: Long? = null,
         val parentMessageID: ID? = null
     ) : Message()
@@ -65,8 +65,8 @@ sealed class Message {
         override val id: ID = ID.create(),
         override val sessionID: String,
         override val agent: String? = null,
-        override val timeCreated: Long = System.currentTimeMillis(),
-        override val timeUpdated: Long = System.currentTimeMillis(),
+        override val timeCreated: Long = JvmSystem.currentTimeMillis(),
+        override val timeUpdated: Long = JvmSystem.currentTimeMillis(),
         val parts: List<Part> = emptyList()
     ) : Message()
 
@@ -75,8 +75,8 @@ sealed class Message {
         override val id: ID = ID.create(),
         override val sessionID: String,
         override val agent: String? = null,
-        override val timeCreated: Long = System.currentTimeMillis(),
-        override val timeUpdated: Long = System.currentTimeMillis(),
+        override val timeCreated: Long = JvmSystem.currentTimeMillis(),
+        override val timeUpdated: Long = JvmSystem.currentTimeMillis(),
         val summary: String,
         val modelID: String? = null,
         val providerID: String? = null
@@ -87,8 +87,8 @@ sealed class Message {
         override val id: ID = ID.create(),
         override val sessionID: String,
         override val agent: String? = null,
-        override val timeCreated: Long = System.currentTimeMillis(),
-        override val timeUpdated: Long = System.currentTimeMillis(),
+        override val timeCreated: Long = JvmSystem.currentTimeMillis(),
+        override val timeUpdated: Long = JvmSystem.currentTimeMillis(),
         val parts: List<Part> = emptyList()
     ) : Message()
 
@@ -147,6 +147,6 @@ sealed class Message {
     data class ToolOutput(
         val type: String,
         val content: String,
-        val timeCreated: Long = System.currentTimeMillis()
+        val timeCreated: Long = JvmSystem.currentTimeMillis()
     )
 }
