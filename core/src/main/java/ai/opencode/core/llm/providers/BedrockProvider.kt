@@ -65,21 +65,13 @@ class BedrockProviderImpl(
                 amzDate = amzDate
             )
 
-            httpClient.sse(
+            httpClient.ssePost(
                 urlString = url,
-                request = {
-                    method = HttpMethod.Post
-                    signedRequest.forEach { (key, value) -> header(key, value) }
-                    setBody(body.toString())
-                }
-            ) {
-                incoming
-                    .filter { it.data != null }
-                    .collect { sseEvent ->
-                        val data = sseEvent.data ?: return@collect
-                        val events = parseBedrockStreamEvent(data)
-                        events.forEach { emit(it) }
-                    }
+                headers = signedRequest,
+                body = body.toString()
+            ).collect { data ->
+                val events = parseBedrockStreamEvent(data)
+                events.forEach { emit(it) }
             }
         } catch (e: Exception) {
             throw mapException(e)

@@ -39,23 +39,21 @@ class OpenRouterProviderImpl(
         val url = buildBaseURL() + "/chat/completions"
         val body = buildRequestBody(request.copy(stream = true))
 
+        val headers = mutableMapOf<String, String>()
+        headers["Content-Type"] = "application/json"
+        headers["Authorization"] = "Bearer ${auth.apiKey ?: auth.bearerToken ?: ""}"
+        headers["HTTP-Referer"] = defaultEndpoint.extra["httpReferer"]?.toString()?.trim('"') ?: "https://opencode.ai"
+        headers["X-Title"] = defaultEndpoint.extra["xTitle"]?.toString()?.trim('"') ?: "OpenCode"
+        defaultEndpoint.headers.forEach { (key, value) -> headers[key] = value }
+
         try {
-            httpClient.sse(
+            httpClient.ssePost(
                 urlString = url,
-                request = {
-                    method = HttpMethod.Post
-                    authHeaders()
-                    setBody(body.toString())
-                }
-            ) {
-                incoming
-                    .filter { it.data != null }
-                    .collect { sseEvent ->
-                        val data = sseEvent.data ?: return@collect
-                        if (data == "[DONE]") return@collect
-                        val events = parseSSEEvent(data)
-                        events.forEach { emit(it) }
-                    }
+                headers = headers,
+                body = body.toString()
+            ).collect { data ->
+                val events = parseSSEEvent(data)
+                events.forEach { emit(it) }
             }
         } catch (e: Exception) {
             throw mapException(e)

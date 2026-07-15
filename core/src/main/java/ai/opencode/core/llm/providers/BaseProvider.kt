@@ -6,7 +6,6 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -23,7 +22,7 @@ abstract class BaseLLMProviderImpl(
     override val name: String,
     override val supportedModels: List<String>,
     override val defaultEndpoint: ProviderEndpoint,
-    private val auth: ProviderAuth
+    protected val auth: ProviderAuth
 ) : LLMClient {
 
     protected open val json: Json = Json {
@@ -37,10 +36,6 @@ abstract class BaseLLMProviderImpl(
         HttpClient(OkHttp) {
             install(ContentNegotiation) {
                 json(json)
-            }
-            install(SSE) {
-                maxRetryCount = 3
-                reconnectDelay = 1000
             }
             install(HttpTimeout) {
                 requestTimeoutMillis = defaultEndpoint.timeoutMs
@@ -83,25 +78,23 @@ abstract class BaseLLMProviderImpl(
         val url = buildBaseURL() + streamingEndpoint
         val body = buildRequestBody(request.copy(stream = true))
 
+        val headers = mutableMapOf<String, String>()
+        when {
+            auth.apiKey != null -> headers["Authorization"] = "Bearer ${auth.apiKey}"
+            auth.bearerToken != null -> headers["Authorization"] = "Bearer ${auth.bearerToken}"
+        }
+        auth.orgID?.let { headers["OpenAI-Organization"] = it }
+        auth.projectID?.let { headers["OpenAI-Project"] = it }
+        defaultEndpoint.headers.forEach { (key, value) -> headers[key] = value }
+
         try {
-            httpClient.sse(
+            httpClient.ssePost(
                 urlString = url,
-                request = {
-                    method = HttpMethod.Post
-                    authHeaders()
-                    setBody(body.toString())
-                }
-            ) {
-                incoming
-                    .filter { it.event != null || it.data != null }
-                    .collect { sseEvent ->
-                        val data = sseEvent.data
-                        if (data == null || data == "[DONE]") {
-                            return@collect
-                        }
-                        val events = parseSSEEvent(data)
-                        events.forEach { emit(it) }
-                    }
+                headers = headers + mapOf("Content-Type" to "application/json"),
+                body = body.toString()
+            ).collect { data ->
+                val events = parseSSEEvent(data)
+                events.forEach { emit(it) }
             }
         } catch (e: Exception) {
             throw mapException(e)

@@ -23,28 +23,24 @@ class OpenAIProviderImpl(
         val url = buildBaseURL() + "/chat/completions"
         val body = buildRequestBody(request.copy(stream = true))
 
+        val headers = mutableMapOf<String, String>()
+        headers["Content-Type"] = "application/json"
+        when {
+            auth.apiKey != null -> headers["Authorization"] = "Bearer ${auth.apiKey}"
+            auth.bearerToken != null -> headers["Authorization"] = "Bearer ${auth.bearerToken}"
+        }
+        auth.orgID?.let { headers["OpenAI-Organization"] = it }
+        auth.projectID?.let { headers["OpenAI-Project"] = it }
+        defaultEndpoint.headers.forEach { (key, value) -> headers[key] = value }
+
         try {
-            httpClient.sse(
+            httpClient.ssePost(
                 urlString = url,
-                request = {
-                    method = io.ktor.http.HttpMethod.Post
-                    authHeaders()
-                    setBody(body.toString())
-                }
-            ) {
-                incoming
-                    .filter { it.event != null || it.data != null }
-                    .collect { sseEvent ->
-                        val data = sseEvent.data
-                        if (data == null || data == "[DONE]") {
-                            if (data == "[DONE]") {
-                                // Stream completed
-                            }
-                            return@collect
-                        }
-                        val events = parseSSEEvent(data)
-                        events.forEach { emit(it) }
-                    }
+                headers = headers,
+                body = body.toString()
+            ).collect { data ->
+                val events = parseSSEEvent(data)
+                events.forEach { emit(it) }
             }
         } catch (e: Exception) {
             throw mapException(e)

@@ -28,7 +28,6 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
-import io.ktor.server.sse.SSE
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.intercept
 import io.ktor.server.routing.routing
@@ -78,7 +77,6 @@ object NetworkModule {
                 allowMethod(HttpMethod.Options)
             }
 
-            install(SSE)
             install(WebSockets)
 
             install(StatusPages) {

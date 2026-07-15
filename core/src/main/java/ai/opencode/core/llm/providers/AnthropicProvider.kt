@@ -39,26 +39,20 @@ class AnthropicProviderImpl(
         val url = buildBaseURL() + streamingEndpoint
         val body = buildRequestBody(request.copy(stream = true))
 
+        val headers = mutableMapOf<String, String>()
+        headers["Content-Type"] = "application/json"
+        headers["anthropic-version"] = "2023-06-01"
+        headers["x-api-key"] = auth.apiKey ?: auth.bearerToken ?: ""
+        defaultEndpoint.headers.forEach { (key, value) -> headers[key] = value }
+
         try {
-            httpClient.sse(
+            httpClient.ssePost(
                 urlString = url,
-                request = {
-                    method = HttpMethod.Post
-                    authHeaders()
-                    setBody(body.toString())
-                }
-            ) {
-                incoming
-                    .filter { it.event != null || it.data != null }
-                    .collect { sseEvent ->
-                        val eventType = sseEvent.event
-                        val data = sseEvent.data ?: return@collect
-
-                        if (data == "[DONE]") return@collect
-
-                        val events = parseAnthropicSSEEvent(eventType, data)
-                        events.forEach { emit(it) }
-                    }
+                headers = headers,
+                body = body.toString()
+            ).collect { data ->
+                val events = parseAnthropicSSEEvent(null, data)
+                events.forEach { emit(it) }
             }
         } catch (e: Exception) {
             throw mapException(e)

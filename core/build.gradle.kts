@@ -58,7 +58,6 @@ dependencies {
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.websockets)
-    implementation(libs.ktor.server.sse)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
@@ -66,7 +65,6 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.client.sse)
     implementation(libs.ktor.client.websockets)
 
     implementation(libs.kotlinx.serialization.json)

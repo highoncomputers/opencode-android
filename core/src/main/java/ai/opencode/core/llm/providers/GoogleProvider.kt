@@ -42,23 +42,19 @@ class GoogleProviderImpl(
         val url = "${buildBaseURL()}/v1beta/models/$modelPath:streamGenerateContent?alt=sse"
         val body = buildRequestBody(request.copy(stream = true))
 
+        val headers = mutableMapOf<String, String>()
+        headers["Content-Type"] = "application/json"
+        headers["x-goog-api-key"] = auth.apiKey ?: ""
+        defaultEndpoint.headers.forEach { (key, value) -> headers[key] = value }
+
         try {
-            httpClient.sse(
+            httpClient.ssePost(
                 urlString = url,
-                request = {
-                    method = HttpMethod.Post
-                    authHeaders()
-                    setBody(body.toString())
-                }
-            ) {
-                incoming
-                    .filter { it.data != null }
-                    .collect { sseEvent ->
-                        val data = sseEvent.data ?: return@collect
-                        if (data == "[DONE]") return@collect
-                        val events = parseGoogleStreamEvent(data)
-                        events.forEach { emit(it) }
-                    }
+                headers = headers,
+                body = body.toString()
+            ).collect { data ->
+                val events = parseGoogleStreamEvent(data)
+                events.forEach { emit(it) }
             }
         } catch (e: Exception) {
             throw mapException(e)

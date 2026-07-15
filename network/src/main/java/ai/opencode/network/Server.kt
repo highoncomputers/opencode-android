@@ -11,7 +11,6 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import io.ktor.server.sse.*
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.runBlocking
 
@@ -46,7 +45,6 @@ fun main(): Unit = runBlocking {
             allowMethod(io.ktor.http.HttpMethod.Options)
         }
 
-        install(SSE)
         install(WebSockets)
 
         install(StatusPages) {

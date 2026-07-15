@@ -3,9 +3,9 @@ package ai.opencode.sdk
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
-import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.websocket.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,12 +46,16 @@ class EventSource(
         sessionID: String? = null,
         eventTypes: List<String>? = null
     ): Flow<ServerEvent> = flow {
-        val eventClient = HttpClient(OkHttp) {
-            install(SSE) {
-                reconnectDelay = this@EventSource.reconnectDelay
-            }
+        val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://")
+        val endpoint = if (sessionID != null) {
+            "$wsUrl/api/session/$sessionID/event"
+        } else {
+            "$wsUrl/api/event"
+        }
+
+        client = HttpClient(OkHttp) {
+            install(io.ktor.client.plugins.websockets.WebSockets)
             defaultRequest {
-                url("${this@EventSource.baseUrl}/api/events")
                 if (username != null && password != null) {
                     val credentials = java.util.Base64.getEncoder()
                         .encodeToString("$username:$password".toByteArray())
@@ -59,63 +63,51 @@ class EventSource(
                 }
             }
         }
-        client = eventClient
         isActive = true
         reconnectAttempts = 0
 
         try {
             while (isActive) {
                 try {
-                    eventClient.sse("api/events") {
-                        sessionID?.let { parameter("sessionID", it) }
-                        eventTypes?.let { types ->
-                            types.forEach { type ->
-                                parameter("type", type)
-                            }
-                        }
-
-                        incoming
-                            .collect { event ->
+                    client!!.webSocket(endpoint) {
+                        for (frame in incoming) {
+                            if (frame is Frame.Text) {
+                                val text = frame.readText()
                                 reconnectAttempts = 0
-                                val serverEvent = parseEvent(event)
+                                val serverEvent = parseJsonEvent(text)
                                 if (serverEvent != null) {
                                     emit(serverEvent)
                                     _events.tryEmit(serverEvent)
                                 }
                             }
+                        }
                     }
                 } catch (e: Exception) {
                     if (!isActive) break
                     reconnectAttempts++
                     if (reconnectAttempts >= maxReconnectAttempts) {
-                        emit(
-                            ServerEvent.Error(
-                                error = "Max reconnection attempts reached",
-                                cause = e
-                            )
+                        val errorEvent = ServerEvent.Error(
+                            error = "Max reconnection attempts reached",
+                            cause = e
                         )
-                        _events.tryEmit(
-                            ServerEvent.Error(
-                                error = "Max reconnection attempts reached",
-                                cause = e
-                            )
-                        )
+                        emit(errorEvent)
+                        _events.tryEmit(errorEvent)
                         break
                     }
                     kotlinx.coroutines.delay(reconnectDelay)
                 }
             }
         } finally {
-            eventClient.close()
+            client?.close()
             client = null
         }
     }
 
-    private fun parseEvent(event: io.ktor.client.plugins.sse.ServerSentEvent<*>): ServerEvent? {
-        val eventType = event.event ?: return null
-        val data = event.data ?: return null
-
+    private fun parseJsonEvent(data: String): ServerEvent? {
         return try {
+            val root = json.parseToJsonElement(data).jsonObject
+            val eventType = root["type"]?.toString()?.removeSurrounding("\"") ?: return null
+
             when (eventType) {
                 "token_stream" -> {
                     val payload = json.decodeFromString<TokenStreamPayload>(data)
@@ -127,7 +119,6 @@ class EventSource(
                         isComplete = payload.isComplete
                     )
                 }
-
                 "tool_progress" -> {
                     val payload = json.decodeFromString<ToolProgressPayload>(data)
                     ServerEvent.ToolProgress(
@@ -140,7 +131,6 @@ class EventSource(
                         detail = payload.detail
                     )
                 }
-
                 "permission_request" -> {
                     val payload = json.decodeFromString<PermissionRequestPayload>(data)
                     ServerEvent.PermissionRequest(
@@ -152,7 +142,6 @@ class EventSource(
                         details = payload.details
                     )
                 }
-
                 "status_update" -> {
                     val payload = json.decodeFromString<StatusUpdatePayload>(data)
                     ServerEvent.StatusUpdate(
@@ -161,7 +150,6 @@ class EventSource(
                         message = payload.message
                     )
                 }
-
                 "session_created" -> {
                     val payload = json.decodeFromString<SessionCreatedPayload>(data)
                     ServerEvent.SessionCreated(
@@ -170,7 +158,6 @@ class EventSource(
                         title = payload.title
                     )
                 }
-
                 "session_updated" -> {
                     val payload = json.decodeFromString<SessionUpdatedPayload>(data)
                     ServerEvent.SessionUpdated(
@@ -179,7 +166,6 @@ class EventSource(
                         title = payload.title
                     )
                 }
-
                 "session_deleted" -> {
                     val payload = json.decodeFromString<SessionDeletedPayload>(data)
                     ServerEvent.SessionDeleted(
@@ -187,7 +173,6 @@ class EventSource(
                         sessionID = payload.sessionID
                     )
                 }
-
                 "message_created" -> {
                     val payload = json.decodeFromString<MessageCreatedPayload>(data)
                     ServerEvent.MessageCreated(
@@ -198,7 +183,6 @@ class EventSource(
                         agent = payload.agent
                     )
                 }
-
                 "message_updated" -> {
                     val payload = json.decodeFromString<MessageUpdatedPayload>(data)
                     ServerEvent.MessageUpdated(
@@ -207,7 +191,6 @@ class EventSource(
                         messageID = payload.messageID
                     )
                 }
-
                 "tool_execution_started" -> {
                     val payload = json.decodeFromString<ToolExecutionStartedPayload>(data)
                     ServerEvent.ToolExecutionStarted(
@@ -218,7 +201,6 @@ class EventSource(
                         toolName = payload.toolName
                     )
                 }
-
                 "tool_execution_completed" -> {
                     val payload = json.decodeFromString<ToolExecutionCompletedPayload>(data)
                     ServerEvent.ToolExecutionCompleted(
@@ -230,7 +212,6 @@ class EventSource(
                         durationMs = payload.durationMs
                     )
                 }
-
                 "tool_execution_failed" -> {
                     val payload = json.decodeFromString<ToolExecutionFailedPayload>(data)
                     ServerEvent.ToolExecutionFailed(
@@ -242,7 +223,6 @@ class EventSource(
                         error = payload.error
                     )
                 }
-
                 "permission_asked" -> {
                     val payload = json.decodeFromString<PermissionAskedPayload>(data)
                     ServerEvent.PermissionAsked(
@@ -254,7 +234,6 @@ class EventSource(
                         permissionType = payload.permissionType
                     )
                 }
-
                 "permission_replied" -> {
                     val payload = json.decodeFromString<PermissionRepliedPayload>(data)
                     ServerEvent.PermissionReplied(
@@ -264,7 +243,6 @@ class EventSource(
                         action = payload.action
                     )
                 }
-
                 "cost_updated" -> {
                     val payload = json.decodeFromString<CostUpdatedPayload>(data)
                     ServerEvent.CostUpdated(
@@ -275,7 +253,6 @@ class EventSource(
                         totalCost = payload.totalCost
                     )
                 }
-
                 "agent_changed" -> {
                     val payload = json.decodeFromString<AgentChangedPayload>(data)
                     ServerEvent.AgentChanged(
@@ -284,7 +261,6 @@ class EventSource(
                         agentID = payload.agentID
                     )
                 }
-
                 "model_changed" -> {
                     val payload = json.decodeFromString<ModelChangedPayload>(data)
                     ServerEvent.ModelChanged(
@@ -294,7 +270,6 @@ class EventSource(
                         providerID = payload.providerID
                     )
                 }
-
                 "summary_created" -> {
                     val payload = json.decodeFromString<SummaryCreatedPayload>(data)
                     ServerEvent.SummaryCreated(
@@ -304,7 +279,6 @@ class EventSource(
                         summary = payload.summary
                     )
                 }
-
                 "question" -> {
                     val payload = json.decodeFromString<QuestionPayload>(data)
                     ServerEvent.Question(
@@ -315,17 +289,10 @@ class EventSource(
                         options = payload.options
                     )
                 }
-
                 "connected" -> {
-                    ServerEvent.Connected(
-                        sessionID = sessionID
-                    )
+                    ServerEvent.Connected(sessionID = sessionID)
                 }
-
-                "heartbeat" -> {
-                    ServerEvent.Heartbeat
-                }
-
+                "ping" -> ServerEvent.Heartbeat
                 "error" -> {
                     val errorData = json.decodeFromString<ErrorPayload>(data)
                     ServerEvent.Error(
@@ -333,7 +300,6 @@ class EventSource(
                         message = errorData.message
                     )
                 }
-
                 else -> ServerEvent.Unknown(
                     eventType = eventType,
                     data = data

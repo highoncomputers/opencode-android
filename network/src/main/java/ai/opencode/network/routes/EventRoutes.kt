@@ -1,63 +1,50 @@
 package ai.opencode.network.routes
 
 import ai.opencode.network.models.EventData
-import io.ktor.server.response.*
+import io.ktor.websocket.*
 import io.ktor.server.routing.*
-import io.ktor.http.*
-import io.ktor.server.sse.*
-import io.ktor.utils.io.*
+import io.ktor.server.websocket.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 fun Route.eventRoutes() {
     route("/api/event") {
-        get {
-            call.respondSse {
-                send(SseEvent(
-                    data = Json.encodeToString(
-                        EventData(
-                            type = "connected",
-                            data = "Event stream established"
-                        )
-                    ),
-                    event = "message"
-                ))
+        webSocket {
+            try {
+                send(Frame.Text(Json.encodeToString(
+                    EventData(type = "connected", data = "Event stream established")
+                )))
                 while (true) {
                     delay(30000)
-                    send(SseEvent(
-                        data = Json.encodeToString(
-                            EventData(type = "ping")
-                        ),
-                        event = "ping"
-                    ))
+                    send(Frame.Text(Json.encodeToString(
+                        EventData(type = "ping")
+                    )))
                 }
+            } catch (e: Exception) {
+                close(CloseReason(CloseReason.Codes.NORMAL, "Client disconnected"))
             }
         }
     }
     route("/api/session/{sessionID}/event") {
-        get {
-            val sessionID = call.parameters["sessionID"] ?: throw IllegalArgumentException("Missing sessionID")
-            call.respondSse {
-                send(SseEvent(
-                    data = Json.encodeToString(
-                        EventData(
-                            type = "connected",
-                            sessionID = sessionID,
-                            data = "Session event stream established"
-                        )
-                    ),
-                    event = "message"
-                ))
+        webSocket {
+            val sessionID = call.parameters["sessionID"] ?: return@webSocket
+            try {
+                send(Frame.Text(Json.encodeToString(
+                    EventData(
+                        type = "connected",
+                        sessionID = sessionID,
+                        data = "Session event stream established"
+                    )
+                )))
                 while (true) {
                     delay(30000)
-                    send(SseEvent(
-                        data = Json.encodeToString(
-                            EventData(type = "ping", sessionID = sessionID)
-                        ),
-                        event = "ping"
-                    ))
+                    send(Frame.Text(Json.encodeToString(
+                        EventData(type = "ping", sessionID = sessionID)
+                    )))
                 }
+            } catch (e: Exception) {
+                close(CloseReason(CloseReason.Codes.NORMAL, "Client disconnected"))
             }
         }
     }
