@@ -20,7 +20,9 @@ import ai.opencode.network.routes.skillRoutes
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
@@ -29,7 +31,6 @@ import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.intercept
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.serialization.kotlinx.json.json
@@ -96,8 +97,6 @@ object NetworkModule {
             }
 
             routing {
-                installAuthInterceptor(authUsername, authPassword)
-
                 healthRoutes()
                 sessionRoutes()
                 messageRoutes()
@@ -115,57 +114,6 @@ object NetworkModule {
                 credentialRoutes()
                 referenceRoutes()
                 locationRoutes()
-            }
-        }
-    }
-}
-
-private fun Route.installAuthInterceptor(
-    authUsername: String,
-    authPassword: String
-) {
-    intercept(ApplicationCallPipeline.Plugins) {
-        val path = call.request.local.uri
-        if (path.startsWith("/api/")) {
-            val authHeader = call.request.header("Authorization")
-            if (authHeader == null || !authHeader.startsWith("Basic ")) {
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Unauthorized", "message" to "Missing or invalid Authorization header")
-                )
-                finish()
-                return@intercept
-            }
-            val decoded = try {
-                java.util.Base64.getDecoder()
-                    .decode(authHeader.removePrefix("Basic ").trim())
-                    .toString(Charsets.UTF_8)
-            } catch (_: Exception) {
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Unauthorized", "message" to "Invalid Base64 encoding")
-                )
-                finish()
-                return@intercept
-            }
-            val colonIndex = decoded.indexOf(':')
-            if (colonIndex == -1) {
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Unauthorized", "message" to "Invalid credentials format")
-                )
-                finish()
-                return@intercept
-            }
-            val username = decoded.substring(0, colonIndex)
-            val password = decoded.substring(colonIndex + 1)
-            if (username != authUsername || password != authPassword) {
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Unauthorized", "message" to "Invalid credentials")
-                )
-                finish()
-                return@intercept
             }
         }
     }
