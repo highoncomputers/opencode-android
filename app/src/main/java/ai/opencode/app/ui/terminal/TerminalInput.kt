@@ -557,6 +557,8 @@ class TerminalInputConnection(
         return deleteSurroundingText(beforeLength, afterLength)
     }
 
+    override fun commitCompletion(text: android.view.inputmethod.CompletionInfo?): Boolean = false
+
     override fun performEditorAction(actionId: Int): Boolean {
         onKeyInput(byteArrayOf(0x0D))
         return true
