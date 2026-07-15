@@ -45,6 +45,7 @@ class OpenCodeService : Service() {
     @Inject
     lateinit var serverStateHolder: ServerStateHolder
 
+    @JvmField
     @Inject
     @Named("serverPort")
     var configuredPort: Int = 0
