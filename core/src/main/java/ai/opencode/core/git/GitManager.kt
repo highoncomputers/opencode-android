@@ -4,7 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.Git as JGit
 import org.eclipse.jgit.diff.DiffEntry
 import org.eclipse.jgit.diff.DiffFormatter
 import org.eclipse.jgit.diff.RawTextComparator
@@ -485,7 +485,7 @@ class GitManager {
                 .setup()
                 .build()
 
-            val git = Git.wrap(repository)
+            val git = JGit.wrap(repository)
             val gitDirPath = repository.directory.canonicalPath
             repositoryCache[gitDirPath] = git
             repositoryCache[normalizedPath] = git

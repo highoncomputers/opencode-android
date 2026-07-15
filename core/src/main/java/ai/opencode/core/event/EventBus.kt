@@ -10,7 +10,7 @@ import javax.inject.Singleton
 @Singleton
 class EventBus @Inject constructor() {
 
-    private val _events = MutableSharedFlow<Event>(extraBufferCapacity = 1024)
+    internal val _events = MutableSharedFlow<Event>(extraBufferCapacity = 1024)
     val events: SharedFlow<Event> = _events
 
     suspend fun emit(event: Event) {

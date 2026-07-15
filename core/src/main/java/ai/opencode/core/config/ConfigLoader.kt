@@ -14,9 +14,9 @@ class ConfigLoader @Inject constructor(
 ) {
 
     fun load(): Config {
-        val globalConfig = loadGlobalConfig()
-        val projectConfig = loadProjectConfig()
-        val internalConfig = loadInternalConfig()
+        val globalConfig = loadGlobalConfig() ?: Config()
+        val projectConfig = loadProjectConfig() ?: Config()
+        val internalConfig = loadInternalConfig() ?: Config()
 
         return mergeConfigs(internalConfig, mergeConfigs(projectConfig, globalConfig))
     }
