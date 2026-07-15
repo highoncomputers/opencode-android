@@ -1,0 +1,2 @@
+-keep class ai.opencode.platform.** { *; }
+-keepclassmembers class ai.opencode.platform.** { *; }

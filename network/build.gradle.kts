@@ -41,7 +41,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
 
-    implementation(platform(libs.ktor.server.core))
+    implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.cors)

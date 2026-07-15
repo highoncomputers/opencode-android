@@ -95,13 +95,13 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.markdown.renderer)
-    implementation(libs.markdown.rendered)
+
 
     implementation(libs.timber)
     implementation(libs.gson)
     implementation(libs.okhttp.logging)
 
-    implementation(platform(libs.ktor.server.core))
+    implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.cors)

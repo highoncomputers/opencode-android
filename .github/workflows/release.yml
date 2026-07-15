@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK and CMake
+        run: |
+          sdkmanager "ndk;27.0.12077973" "cmake;3.22.1"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Get version
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "OpenCode Android ${{ steps.version.outputs.tag }}"
+          tag_name: ${{ steps.version.outputs.tag }}
+          body: |
+            ## OpenCode for Android ${{ steps.version.outputs.tag }}
+
+            Full standalone AI coding agent for Android — complete Kotlin rewrite of [OpenCode](https://github.com/anomalyco/opencode).
+
+            ### What's included
+            - Custom JNI PTY terminal (no Termux needed)
+            - Full VT100/ANSI terminal with Compose Canvas renderer
+            - 15+ LLM providers (OpenAI, Anthropic, Google, Azure, xAI, etc.)
+            - Session management with event sourcing
+            - Git integration via JGit
+            - File browser with search
+            - Embedded HTTP server with SSE/WebSocket
+            - Material 3 dark/light/terminal themes
+
+            ### Installation
+            1. Download the APK below
+            2. Enable "Install from unknown sources" if prompted
+            3. Install and open OpenCode
+          files: |
+            app/build/outputs/apk/release/*.apk
+          draft: false
+          prerelease: false

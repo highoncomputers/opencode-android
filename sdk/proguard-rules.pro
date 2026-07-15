@@ -1,0 +1,2 @@
+-keep class ai.opencode.sdk.** { *; }
+-keepclassmembers class ai.opencode.sdk.** { *; }
