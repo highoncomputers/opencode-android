@@ -469,7 +469,7 @@ class GitManager {
 
             if (resolvedRef != null) {
                 val peeledRef = repository.peel(resolvedRef)
-                val commit = repository.parseCommit(peeledRef.id)
+                val commit = repository.parseCommit(peeledRef.getObjectId())
 
                 Git.CommitRef(
                     hash = commit.id.name,
