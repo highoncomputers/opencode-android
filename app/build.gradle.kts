@@ -118,5 +118,5 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
     androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.compose.test.junit4)
 }

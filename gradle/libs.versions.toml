@@ -100,6 +100,9 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 
+# Desugaring
+desugar = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
+
 # Logging & Utilities
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
