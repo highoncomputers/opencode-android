@@ -185,69 +185,69 @@ fun ChatScreen(
                         }
                     }
                 } else {
-                    Box(Modifier.fillMaxSize()) {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            items(
-                                items = uiState.messages,
-                                key = { it.id.value }
-                            ) { message ->
-                                MessageBubble(
-                                    message = message,
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(
+                            items = uiState.messages,
+                            key = { it.id.value }
+                        ) { message ->
+                            MessageBubble(
+                                message = message,
+                                modifier = Modifier.animateItem()
+                            )
+                        }
 
-                            if (uiState.isSending) {
-                                item {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 16.dp, top = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
-                                            strokeWidth = 2.dp,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = "Thinking...",
-                                            modifier = Modifier.padding(start = 8.dp),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                        if (uiState.isSending) {
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, top = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Thinking...",
+                                        modifier = Modifier.padding(start = 8.dp),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
+                    }
+                }
 
-                        AnimatedVisibility(
-                            visible = listState.canScrollBackward,
-                            enter = fadeIn(),
-                            exit = fadeOut(),
-                            modifier = Modifier.align(Alignment.BottomCenter)
+                Box(Modifier.fillMaxSize()) {
+                    AnimatedVisibility(
+                        visible = listState.canScrollBackward,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(uiState.messages.size - 1)
+                                }
+                            },
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
                         ) {
-                            IconButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(uiState.messages.size - 1)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surface)
-                            ) {
-                                Icon(
-                                    Icons.Filled.KeyboardArrowDown,
-                                    contentDescription = "Scroll to bottom",
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                            Icon(
+                                Icons.Filled.KeyboardArrowDown,
+                                contentDescription = "Scroll to bottom",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
