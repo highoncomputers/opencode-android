@@ -135,7 +135,7 @@ data class GlobPattern(
     }
 
     private fun escapeRegex(s: String): String {
-        return s.replace(Regex("([.*+?^${}()|\\[\\]\\\\])"), "\\\\$1")
+        return s.replace(Regex("([.*+?^${'$'}{}()|\\[\\]\\\\])"), "\\\\$1")
     }
 }
 
