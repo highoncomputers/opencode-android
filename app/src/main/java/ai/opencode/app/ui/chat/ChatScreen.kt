@@ -226,30 +226,15 @@ fun ChatScreen(
                 }
 
                 Box(Modifier.fillMaxSize()) {
-                    AnimatedVisibility(
+                    ScrollToBottomButton(
                         visible = listState.canScrollBackward,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
+                        onScrollToBottom = {
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(uiState.messages.size - 1)
+                            }
+                        },
                         modifier = Modifier.align(Alignment.BottomCenter)
-                    ) {
-                        IconButton(
-                            onClick = {
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(uiState.messages.size - 1)
-                                }
-                            },
-                            modifier = Modifier
-                                .padding(bottom = 8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            Icon(
-                                Icons.Filled.KeyboardArrowDown,
-                                contentDescription = "Scroll to bottom",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
+                    )
                 }
             }
 
@@ -350,5 +335,33 @@ fun ChatScreen(
             },
             onDismiss = { viewModel.onAction(ChatAction.DismissPermission) }
         )
+    }
+}
+
+@Composable
+private fun ScrollToBottomButton(
+    visible: Boolean,
+    onScrollToBottom: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = modifier
+    ) {
+        IconButton(
+            onClick = onScrollToBottom,
+            modifier = Modifier
+                .padding(bottom = 8.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
+            Icon(
+                Icons.Filled.KeyboardArrowDown,
+                contentDescription = "Scroll to bottom",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }

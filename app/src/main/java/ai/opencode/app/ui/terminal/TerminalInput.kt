@@ -620,4 +620,6 @@ class TerminalInputConnection(
     override fun performContextMenuAction(id: Int): Boolean = false
 
     override fun performPrivateCommand(action: String?, extras: android.os.Bundle?): Boolean = false
+
+    override fun getHandler(): android.os.Handler? = null
 }
