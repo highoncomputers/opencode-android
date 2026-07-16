@@ -624,4 +624,6 @@ class TerminalInputConnection(
     override fun getHandler(): android.os.Handler? = null
 
     override fun closeConnection() {}
+
+    override fun commitContent(inputContentInfo: android.view.inputmethod.InputContentInfo, flags: Int, opts: android.os.Bundle?): Boolean = false
 }
