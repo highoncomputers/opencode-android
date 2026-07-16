@@ -622,4 +622,6 @@ class TerminalInputConnection(
     override fun performPrivateCommand(action: String?, extras: android.os.Bundle?): Boolean = false
 
     override fun getHandler(): android.os.Handler? = null
+
+    override fun closeConnection() {}
 }
